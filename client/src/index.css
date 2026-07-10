@@ -352,13 +352,40 @@ body {
 }
 
 .release-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   overflow-y: auto;
   flex: 1;
   border: 1px solid var(--border);
   border-radius: 10px;
+}
+
+.release-group-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  background: var(--bg-surface-raised);
+  border-bottom: 1px solid var(--border);
+}
+
+.release-group-count {
+  color: var(--text-muted);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.release-group-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .release-row {
@@ -417,6 +444,20 @@ body {
 .release-meta {
   font-size: 0.78rem;
   color: var(--text-muted);
+}
+
+.release-price {
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
+}
+
+.release-price a {
+  color: var(--accent-hover);
+  text-decoration: none;
+}
+
+.release-price a:hover {
+  text-decoration: underline;
 }
 
 .badge {

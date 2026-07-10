@@ -1,6 +1,6 @@
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const TIERS = ['search', 'list', 'resolve'];
+const TIERS = ['search', 'list', 'resolve', 'price'];
 
 // Token-bucket-ish limiter using a sliding window: allows at most `max` calls
 // started within any rolling `windowMs` period, and runs queued calls one at
@@ -10,6 +10,9 @@ const TIERS = ['search', 'list', 'resolve'];
 //               rare and human-triggered, so it should never wait at all.
 //   'list'    — loading an entity's profile/release list.
 //   'resolve' — bulk per-release video lookups.
+//   'price'   — bulk per-release marketplace price lookups. Strictly lowest
+//               priority — price is a nice-to-have, and shouldn't slow down
+//               the video resolution that actually makes releases playable.
 // 'list' and 'resolve' round-robin against each other rather than 'list'
 // strictly winning: a still-paginating 9,000-release artist continuously
 // re-queues itself in 'list', and if that tier always won outright, video
@@ -20,7 +23,7 @@ export class RateLimiter {
     this.max = max;
     this.windowMs = windowMs;
     this.timestamps = [];
-    this.queues = { search: [], list: [], resolve: [] };
+    this.queues = { search: [], list: [], resolve: [], price: [] };
     this.lastRoundRobinTier = 'resolve';
     this.processing = false;
   }
@@ -44,6 +47,8 @@ export class RateLimiter {
         return this.queues[tier].shift();
       }
     }
+
+    if (this.queues.price.length > 0) return this.queues.price.shift();
     return null;
   }
 

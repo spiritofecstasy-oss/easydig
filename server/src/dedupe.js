@@ -1,3 +1,25 @@
+// Discogs' format field is messy free text (e.g. "Vinyl, 12\", EP" or
+// "CD, Album, Reissue") rather than a clean category. We bucket it into a
+// handful of categories for grouping the discography view. Checked in this
+// order since a format string can contain multiple hints (a box set is
+// often also tagged "Comp") and the more specific bucket should win.
+const CATEGORY_PATTERNS = [
+  ['Box Set', /\bbox\b/i],
+  ['Compilation', /\bcomp(ilation)?\b/i],
+  ['Mixtape', /\bmixtape\b/i],
+  ['EP', /\bep\b/i],
+  ['Album', /\balbum\b/i],
+  ['Single', /\bsingle\b/i],
+];
+
+export function categorizeFormat(format) {
+  if (!format) return 'Other';
+  for (const [category, pattern] of CATEGORY_PATTERNS) {
+    if (pattern.test(format)) return category;
+  }
+  return 'Other';
+}
+
 // Discogs' /artists/{id}/releases endpoint mixes "master" entries (an album,
 // representing all its pressings) with standalone "release" entries. We key
 // on master id when present so a prolific artist's 30 repressings of one LP
@@ -17,11 +39,15 @@ function normalizeArtistRelease(r, releaseId, masterId) {
     title: r.title || 'Untitled',
     year: r.year || null,
     format: r.format || null,
+    category: categorizeFormat(r.format),
     role: r.role || 'Main',
     thumb: r.thumb || null,
     artistName: null,
     resolved: false,
     videos: [],
+    priceResolved: false,
+    lowestPrice: null,
+    numForSale: null,
   };
 }
 
@@ -62,11 +88,15 @@ function normalizeLabelRelease(r) {
     title: r.title || 'Untitled',
     year: r.year || null,
     format: r.format || null,
+    category: categorizeFormat(r.format),
     role: 'Main',
     thumb: r.thumb || null,
     artistName: r.artist || null,
     resolved: false,
     videos: [],
+    priceResolved: false,
+    lowestPrice: null,
+    numForSale: null,
   };
 }
 

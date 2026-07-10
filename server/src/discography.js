@@ -4,6 +4,7 @@ import {
   mergeArtistReleases,
   normalizeLabelReleases,
   mergeLabelReleases,
+  categorizeFormat,
 } from './dedupe.js';
 import {
   getArtistProfile,
@@ -11,6 +12,7 @@ import {
   getLabelProfile,
   getLabelReleasesPage,
   getReleaseVideos,
+  getMarketplaceStats,
 } from './discogs.js';
 
 // Tracks whether a background resolution worker is currently running for an
@@ -28,6 +30,11 @@ const runningWorkers = new Set();
 // a multi-minute hang, so we load page 1 synchronously and page the rest
 // here while the (already-usable) partial list is returned immediately.
 const listWorkers = new Set();
+
+// Tracks a background pass fetching marketplace prices — a separate, lowest-
+// priority worker so price lookups (a nice-to-have) never compete with video
+// resolution (what actually makes a release playable) for the same budget.
+const priceWorkers = new Set();
 
 function workerKey(type, id) {
   return `${type}:${id}`;
@@ -48,7 +55,15 @@ function startResolutionWorker(type, id, includeAll) {
   (async () => {
     for (const release of targets) {
       try {
-        release.videos = await getReleaseVideos(release.id);
+        const { videos, formatText } = await getReleaseVideos(release.id);
+        release.videos = videos;
+        // The artist-releases listing often has no format at all for
+        // master-collapsed entries; upgrade with the real thing now that
+        // we've fetched it anyway, if we didn't already have one.
+        if (formatText && (!release.format || release.category === 'Other')) {
+          release.format = release.format || formatText;
+          release.category = categorizeFormat(formatText);
+        }
       } catch (err) {
         console.error(`Failed to resolve release ${release.id}:`, err.message);
         release.videos = [];
@@ -58,6 +73,37 @@ function startResolutionWorker(type, id, includeAll) {
       }
     }
     runningWorkers.delete(wKey);
+  })();
+}
+
+function startPriceWorker(type, id, includeAll) {
+  const wKey = workerKey(type, id);
+  if (priceWorkers.has(wKey)) return;
+
+  const entity = cache.getEntity(type, id);
+  const targets = entity.releases.filter(
+    (r) => (includeAll || type === 'label' || r.role === 'Main') && !r.priceResolved
+  );
+  if (targets.length === 0) return;
+
+  priceWorkers.add(wKey);
+
+  (async () => {
+    for (const release of targets) {
+      try {
+        const stats = await getMarketplaceStats(release.id);
+        release.lowestPrice = stats.lowestPrice;
+        release.numForSale = stats.numForSale;
+      } catch (err) {
+        console.error(`Failed to fetch price for release ${release.id}:`, err.message);
+        release.lowestPrice = null;
+        release.numForSale = null;
+      } finally {
+        release.priceResolved = true;
+        cache.setEntity(type, id, entity);
+      }
+    }
+    priceWorkers.delete(wKey);
   })();
 }
 
@@ -135,6 +181,7 @@ export async function ensureEntityLoaded(type, id, includeAll) {
 
   if (!entity.listComplete) startListWorker(type, id);
   startResolutionWorker(type, id, includeAll);
+  startPriceWorker(type, id, includeAll);
   return entity;
 }
 
@@ -160,6 +207,7 @@ export function refreshEntity(type, id) {
   cache.clearEntity(type, id);
   runningWorkers.delete(workerKey(type, id));
   listWorkers.delete(workerKey(type, id));
+  priceWorkers.delete(workerKey(type, id));
 }
 
 // Resolves one release's videos immediately, at top priority — used when a
@@ -174,7 +222,12 @@ export async function resolveReleaseNow(type, id, releaseId) {
 
   if (!release.resolved) {
     try {
-      release.videos = await getReleaseVideos(releaseId, 'search');
+      const { videos, formatText } = await getReleaseVideos(releaseId, 'search');
+      release.videos = videos;
+      if (formatText && (!release.format || release.category === 'Other')) {
+        release.format = release.format || formatText;
+        release.category = categorizeFormat(formatText);
+      }
     } catch (err) {
       console.error(`On-demand resolve failed for release ${releaseId}:`, err.message);
       release.videos = [];

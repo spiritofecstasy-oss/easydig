@@ -136,6 +136,13 @@ function extractYoutubeId(uri) {
 
 // tier defaults to 'resolve' (the background walker); pass 'search' for an
 // on-demand single lookup triggered by a user clicking a release right now.
+//
+// Also returns `formatText`: the artist-releases listing often has no format
+// data at all for master-collapsed entries (a master aggregates every
+// pressing, so Discogs doesn't attach one there), but the release detail
+// endpoint always has real formats/descriptions — free to read since we're
+// already fetching this response for videos, so callers can upgrade a
+// release's category with it.
 export async function getReleaseVideos(releaseId, tier = 'resolve') {
   const data = await discogsRequest(`/releases/${releaseId}`, {}, tier);
   const videos = (data.videos || [])
@@ -146,5 +153,27 @@ export async function getReleaseVideos(releaseId, tier = 'resolve') {
       position: i,
     }))
     .filter((v) => v.youtubeId);
-  return videos;
+
+  const formatText = (data.formats || [])
+    .map((f) => [f.name, ...(f.descriptions || [])].join(' '))
+    .join(' ');
+
+  return { videos, formatText: formatText || null };
+}
+
+// tier defaults to 'price' (lowest-priority background pass); pass 'search'
+// for an on-demand lookup. Discogs' checkout/purchase flow itself is only
+// available on discogs.com — this just surfaces what's for sale and links out.
+export async function getMarketplaceStats(releaseId, tier = 'price') {
+  const data = await discogsRequest(
+    `/marketplace/stats/${releaseId}`,
+    { curr_abbr: 'USD' },
+    tier
+  );
+  return {
+    lowestPrice: data.lowest_price
+      ? { value: data.lowest_price.value, currency: data.lowest_price.currency }
+      : null,
+    numForSale: data.num_for_sale ?? 0,
+  };
 }
