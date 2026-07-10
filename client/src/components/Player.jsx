@@ -42,10 +42,16 @@ export default function Player({ queue, currentIndex, onNext, onPrev }) {
       </div>
       <div className="player-controls">
         <button onClick={onPrev} disabled={currentIndex === 0}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           Prev
         </button>
         <button onClick={onNext} disabled={currentIndex === queue.length - 1}>
           Next
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
       </div>
     </section>

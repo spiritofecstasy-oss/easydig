@@ -237,7 +237,22 @@ export default function App() {
     <div className="app">
       <header className="app-header" ref={headerRef}>
         <div className="app-header-inner">
-          <h1>Discogs → YouTube Discography Player</h1>
+          <div className="app-title">
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+              <circle cx="12" cy="12" r="6.5" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+              <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+            </svg>
+            <h1>Discogs → YouTube Discography Player</h1>
+          </div>
           <SearchBar
             value={searchValue}
             onChange={setSearchValue}
@@ -268,6 +283,29 @@ export default function App() {
           )}
         </div>
       </header>
+
+      {!selectedEntity && (
+        <div className="empty-state">
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.2" />
+            <circle cx="12" cy="12" r="6.5" stroke="currentColor" strokeWidth="1" opacity="0.6" />
+            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1" opacity="0.6" />
+            <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+          </svg>
+          <h2>Start digging</h2>
+          <p>
+            Search any artist or label above to pull their discography into a
+            YouTube playlist, in release order.
+          </p>
+        </div>
+      )}
 
       {selectedEntity && (
         <main className="main-layout">
