@@ -1,0 +1,7 @@
+node_modules/
+.claude/
+server/data/cache.json
+server/.env
+.env
+dist/
+.DS_Store

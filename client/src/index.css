@@ -1,0 +1,399 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #121214;
+  color: #e8e8ea;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #2a2a2e;
+  position: relative;
+}
+
+.app-header-inner {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.app-header h1 {
+  font-size: 1.1rem;
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+  color: #f2f2f4;
+}
+
+.search-bar input {
+  width: 100%;
+  max-width: 420px;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #3a3a3e;
+  background: #1c1c1f;
+  color: #e8e8ea;
+  font-size: 0.95rem;
+}
+
+.spinner-text {
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+  color: #8a8a90;
+}
+
+.search-results {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  max-width: 420px;
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  background: #1c1c1f;
+  border: 1px solid #3a3a3e;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 10;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+}
+
+.search-results li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+}
+
+.search-results li:hover {
+  background: #29292e;
+}
+
+.search-results img {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.result-thumb-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: #29292e;
+  flex-shrink: 0;
+}
+
+.result-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-type {
+  font-size: 0.72rem;
+  color: #8a8a90;
+  text-transform: capitalize;
+  flex-shrink: 0;
+}
+
+.resolve-error {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #ff8080;
+  max-width: 420px;
+}
+
+.entity-type-badge {
+  font-size: 0.7rem;
+  color: #8a8a90;
+  border: 1px solid #3a3a3e;
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.main-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  min-height: 0;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 800px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .player {
+    position: static;
+  }
+
+  .release-list {
+    max-height: 50vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: 1rem;
+  }
+
+  .app-header h1 {
+    font-size: 1rem;
+  }
+
+  .main-layout {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .search-bar input {
+    max-width: 100%;
+  }
+
+  .search-results {
+    max-width: 100%;
+    left: 0;
+    right: 0;
+  }
+
+  .discography-header h2 {
+    font-size: 1rem;
+  }
+
+  .player {
+    padding: 0.75rem;
+  }
+}
+
+.discography {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.discography-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.artist-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.discography-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  color: #b5b5ba;
+}
+
+.controls button {
+  background: #29292e;
+  border: 1px solid #3a3a3e;
+  color: #e8e8ea;
+  padding: 0.35rem 0.7rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.progress {
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  color: #b5b5ba;
+}
+
+.progress-bar {
+  height: 6px;
+  background: #29292e;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.3rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #4f8cff;
+  transition: width 0.3s ease;
+}
+
+.release-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+  border: 1px solid #2a2a2e;
+  border-radius: 8px;
+}
+
+.release-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+  border-bottom: 1px solid #212124;
+}
+
+.release-row:last-child {
+  border-bottom: none;
+}
+
+.release-row:hover {
+  background: #1c1c1f;
+}
+
+.release-row.current {
+  background: #22314f;
+}
+
+.release-row.unavailable {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.release-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.release-thumb.placeholder {
+  background: #29292e;
+}
+
+.release-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.release-title {
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.release-meta {
+  font-size: 0.78rem;
+  color: #8a8a90;
+}
+
+.badge {
+  font-size: 0.7rem;
+  color: #8a8a90;
+  flex-shrink: 0;
+}
+
+.badge.muted {
+  color: #6a6a70;
+}
+
+.player {
+  border: 1px solid #2a2a2e;
+  border-radius: 8px;
+  padding: 1rem;
+  height: fit-content;
+  position: sticky;
+  top: 1rem;
+}
+
+.player.empty {
+  color: #8a8a90;
+  font-size: 0.9rem;
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #000;
+}
+
+.video-embed,
+.video-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.now-playing {
+  margin-top: 0.75rem;
+}
+
+.now-playing-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.now-playing-sub {
+  font-size: 0.85rem;
+  color: #b5b5ba;
+}
+
+.now-playing-position {
+  font-size: 0.78rem;
+  color: #8a8a90;
+  margin-top: 0.2rem;
+}
+
+.player-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.player-controls button {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #3a3a3e;
+  background: #29292e;
+  color: #e8e8ea;
+  cursor: pointer;
+}
+
+.player-controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

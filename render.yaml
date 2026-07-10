@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: discogs-youtube-playlist
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: DISCOGS_TOKEN
+        sync: false
