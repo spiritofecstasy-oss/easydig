@@ -161,3 +161,27 @@ export function refreshEntity(type, id) {
   runningWorkers.delete(workerKey(type, id));
   listWorkers.delete(workerKey(type, id));
 }
+
+// Resolves one release's videos immediately, at top priority — used when a
+// user clicks a release that the background walker hasn't reached yet, so
+// playback isn't gated on however far through the discography it's gotten.
+export async function resolveReleaseNow(type, id, releaseId) {
+  const entity = cache.getEntity(type, id);
+  if (!entity) throw new Error('Entity not loaded yet');
+
+  const release = entity.releases.find((r) => r.id === releaseId);
+  if (!release) throw new Error('Release not found');
+
+  if (!release.resolved) {
+    try {
+      release.videos = await getReleaseVideos(releaseId, 'search');
+    } catch (err) {
+      console.error(`On-demand resolve failed for release ${releaseId}:`, err.message);
+      release.videos = [];
+    }
+    release.resolved = true;
+    cache.setEntity(type, id, entity);
+  }
+
+  return release;
+}

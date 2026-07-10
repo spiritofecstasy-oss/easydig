@@ -11,6 +11,7 @@ import {
   ensureEntityLoaded,
   getJobForFilter,
   refreshEntity,
+  resolveReleaseNow,
 } from './discography.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -22,9 +23,10 @@ const CLIENT_DIST = path.join(__dirname, '..', '..', 'client', 'dist');
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
-// Render (and most hosts) assign the port via PORT; API_PORT is what we use
-// for local dev to avoid colliding with the preview harness's own PORT var.
-const PORT = process.env.PORT || process.env.API_PORT || 3001;
+// API_PORT (set in server/.env) wins locally so we don't collide with the
+// dev preview harness's own PORT var; Render never sets API_PORT, so
+// production correctly falls through to the PORT it assigns.
+const PORT = process.env.API_PORT || process.env.PORT || 3001;
 
 app.get('/api/search', async (req, res) => {
   const q = (req.query.q || '').toString().trim();
@@ -84,6 +86,22 @@ app.get('/api/entity/:type/:id/state', async (req, res) => {
       releases,
       job,
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Resolves one release's video(s) right now, at top priority — used when the
+// user clicks a release the background walker hasn't reached yet, so a click
+// plays almost instantly instead of waiting on however far the walk has got.
+app.get('/api/entity/:type/:id/release/:releaseId/resolve', async (req, res) => {
+  const { type } = req.params;
+  const id = Number(req.params.id);
+  const releaseId = Number(req.params.releaseId);
+
+  try {
+    const release = await resolveReleaseNow(type, id, releaseId);
+    res.json(release);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -7,6 +7,7 @@ export default function DiscographyList({
   onRefresh,
   currentReleaseId,
   onSelectRelease,
+  resolvingReleaseId,
 }) {
   const progressPct =
     job.total > 0 ? Math.round((job.resolved / job.total) * 100) : 100;
@@ -54,18 +55,20 @@ export default function DiscographyList({
       <ul className="release-list">
         {releases.map((r) => {
           const hasVideo = r.videos && r.videos.length > 0;
+          const confirmedNoVideo = r.resolved && !hasVideo;
           const isCurrent = r.id === currentReleaseId;
+          const isResolvingNow = resolvingReleaseId === r.id;
           return (
             <li
               key={r.id}
               className={[
                 'release-row',
                 isCurrent ? 'current' : '',
-                r.resolved && !hasVideo ? 'unavailable' : '',
+                confirmedNoVideo ? 'unavailable' : '',
               ]
                 .join(' ')
                 .trim()}
-              onClick={() => hasVideo && onSelectRelease(r.id)}
+              onClick={() => !confirmedNoVideo && onSelectRelease(r.id)}
             >
               {r.thumb ? (
                 <img src={r.thumb} alt="" className="release-thumb" />
@@ -79,8 +82,9 @@ export default function DiscographyList({
                   {r.year || '—'} · {r.format || r.role}
                 </div>
               </div>
-              {!r.resolved && <span className="badge">…</span>}
-              {r.resolved && !hasVideo && (
+              {isResolvingNow && <span className="badge loading">loading…</span>}
+              {!isResolvingNow && !r.resolved && <span className="badge">…</span>}
+              {!isResolvingNow && confirmedNoVideo && (
                 <span className="badge muted">no video</span>
               )}
             </li>

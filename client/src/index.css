@@ -325,6 +325,16 @@ body {
   color: #6a6a70;
 }
 
+.badge.loading {
+  color: #4f8cff;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .player {
   border: 1px solid #2a2a2e;
   border-radius: 8px;

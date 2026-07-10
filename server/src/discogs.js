@@ -134,8 +134,10 @@ function extractYoutubeId(uri) {
   return match ? match[1] : null;
 }
 
-export async function getReleaseVideos(releaseId) {
-  const data = await discogsRequest(`/releases/${releaseId}`);
+// tier defaults to 'resolve' (the background walker); pass 'search' for an
+// on-demand single lookup triggered by a user clicking a release right now.
+export async function getReleaseVideos(releaseId, tier = 'resolve') {
+  const data = await discogsRequest(`/releases/${releaseId}`, {}, tier);
   const videos = (data.videos || [])
     .map((v, i) => ({
       youtubeId: extractYoutubeId(v.uri),

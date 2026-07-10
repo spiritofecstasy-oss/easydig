@@ -23,6 +23,11 @@ export default function App() {
   // raw array index — the queue gets rebuilt as more releases resolve in the
   // background, which shifts numeric positions but never changes a track's key.
   const [currentKey, setCurrentKey] = useState(null);
+  // A release the user just clicked that isn't resolved yet — being fetched
+  // on demand right now — and one we're waiting to jump to once its videos
+  // land in `releases` and the queue picks them up.
+  const [resolvingReleaseId, setResolvingReleaseId] = useState(null);
+  const [pendingJumpReleaseId, setPendingJumpReleaseId] = useState(null);
   const pollRef = useRef(null);
   const latestQueryRef = useRef('');
   const headerRef = useRef(null);
@@ -38,6 +43,17 @@ export default function App() {
       setCurrentKey(queue[0].key);
     }
   }, [currentIndex, queue]);
+
+  // Once an on-demand-resolved release's videos show up in the queue, jump
+  // to it — the resolve fetch and the queue rebuild land in separate renders.
+  useEffect(() => {
+    if (pendingJumpReleaseId == null) return;
+    const item = queue.find((q) => q.releaseId === pendingJumpReleaseId);
+    if (item) {
+      setCurrentKey(item.key);
+      setPendingJumpReleaseId(null);
+    }
+  }, [queue, pendingJumpReleaseId]);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -162,9 +178,34 @@ export default function App() {
     }
   }
 
-  function jumpToRelease(releaseId) {
-    const item = queue.find((q) => q.releaseId === releaseId);
-    if (item) setCurrentKey(item.key);
+  async function jumpToRelease(releaseId) {
+    const queueItem = queue.find((q) => q.releaseId === releaseId);
+    if (queueItem) {
+      setCurrentKey(queueItem.key);
+      return;
+    }
+
+    const release = releases.find((r) => r.id === releaseId);
+    if (!release || (release.resolved && (!release.videos || release.videos.length === 0))) {
+      return; // confirmed no video — nothing to jump to
+    }
+
+    setResolvingReleaseId(releaseId);
+    try {
+      const res = await fetch(
+        `/api/entity/${selectedEntity.type}/${selectedEntity.id}/release/${releaseId}/resolve`
+      );
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setReleases((prev) => prev.map((r) => (r.id === releaseId ? data : r)));
+      if (data.videos && data.videos.length > 0) {
+        setPendingJumpReleaseId(releaseId);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setResolvingReleaseId(null);
+    }
   }
 
   async function handleRefresh() {
@@ -239,6 +280,7 @@ export default function App() {
             onRefresh={handleRefresh}
             currentReleaseId={queue[currentIndex]?.releaseId}
             onSelectRelease={jumpToRelease}
+            resolvingReleaseId={resolvingReleaseId}
           />
           <Player
             queue={queue}
